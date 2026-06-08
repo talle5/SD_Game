@@ -35,19 +35,19 @@ func main() {
 		Color:     rl.Red,
 		Direction: game.Stop,
 		Input: func(p *game.Player) {
-			if rl.IsKeyDown(rl.KeyLeft) {
+			if rl.IsKeyPressed(rl.KeyLeft) {
 				p.Direction = game.Left
 				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
-			if rl.IsKeyDown(rl.KeyRight) {
+			if rl.IsKeyPressed(rl.KeyRight) {
 				p.Direction = game.Right
 				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
-			if rl.IsKeyDown(rl.KeyUp) {
+			if rl.IsKeyPressed(rl.KeyUp) {
 				p.Direction = game.Up
 				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
-			if rl.IsKeyDown(rl.KeyDown) {
+			if rl.IsKeyPressed(rl.KeyDown) {
 				p.Direction = game.Down
 				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
