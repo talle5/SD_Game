@@ -3,21 +3,17 @@ package network
 import (
 	"fmt"
 	"net"
+	"raylib-game/game"
 	"strconv"
 	"strings"
-
-	"raylib-game/game"
 )
 
-var (
-	peers  = make(map[string]*Peer)
-	player = make(map[Peer]*game.Player)
-)
+var punchDone = make(chan bool, 1)
 
 func ReceiverLoop(socket *net.UDPConn) {
 	buf := make([]byte, 1024)
 	for {
-		n, _, _ := socket.ReadFromUDP(buf)
+		n, addr, _ := socket.ReadFromUDP(buf)
 		texto := string(buf[:n])
 		mensagem := strings.Split(texto, " ")
 		msize := len(mensagem)
@@ -25,6 +21,9 @@ func ReceiverLoop(socket *net.UDPConn) {
 			continue
 		}
 		switch mensagem[0] {
+		case "PUNCH", "PUNCH_OK":
+			socket.WriteToUDP([]byte("PUNCH_OK"), addr)
+			punchDone <- true
 		case "move":
 			move(mensagem[1:msize])
 		case "exit":
@@ -37,11 +36,11 @@ func ReceiverLoop(socket *net.UDPConn) {
 
 func move(message []string) {
 	id := message[0]
-	peer := peers[id]
+	peer := Peers[id]
 	if peer == nil {
 		return
 	}
-	plr := player[*peer]
+	plr := Players[peer]
 	if plr == nil {
 		return
 	}
@@ -52,6 +51,7 @@ func move(message []string) {
 	plr.Y = atoi32(y)
 	plr.Direction = game.Direction(atoi32(d))
 }
+
 func exit(message []string) {}
 
 func atoi32(s string) int32 {

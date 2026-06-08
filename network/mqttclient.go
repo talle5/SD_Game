@@ -3,6 +3,7 @@ package network
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 )
@@ -10,13 +11,14 @@ import (
 var (
 	brokerHost string = "broker.emqx.io"
 	brokerPort int    = 1883
-	clientID   string = "go-client-demo"
-	topic      string = "test/csharp/topico"
+	clientID string = fmt.Sprintf("go-%d", time.Now().UnixNano())
 
 	mqttMu     sync.Mutex
 	mqttClient mqtt.Client
 )
 
+// MQTTClient retorna uma instância do cliente MQTT. Se já existir uma conexão ativa,
+// ela será reutilizada (padrão Singleton). Utiliza um Mutex para garantir segurança em concorrência.
 func MQTTClient() (mqtt.Client, error) {
 	mqttMu.Lock()
 	defer mqttMu.Unlock()
@@ -40,11 +42,9 @@ func MQTTClient() (mqtt.Client, error) {
 	return mqttClient, nil
 }
 
-func PublishMQTT(topic string, payload []byte) error {
-	return PublishMQTTRetained(topic, payload, true)
-}
-
-func PublishMQTTRetained(topic string, payload []byte, retained bool) error {
+// PublishMQTT publica uma mensagem em um tópico no broker MQTT,
+// permitindo definir explicitamente se a mensagem deve ser retida (retained) ou não.
+func PublishMQTT(topic string, payload []byte, retained bool) error {
 	client, err := MQTTClient()
 	if err != nil {
 		return err
@@ -55,6 +55,8 @@ func PublishMQTTRetained(topic string, payload []byte, retained bool) error {
 	return token.Error()
 }
 
+// SubscribeMQTT inscreve o cliente em um tópico MQTT e define uma função de callback (handler)
+// que será executada sempre que uma nova mensagem for recebida no tópico especificado.
 func SubscribeMQTT(topic string, handler func([]byte)) error {
 	client, err := MQTTClient()
 	if err != nil {

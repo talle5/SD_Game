@@ -1,11 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"net"
-
-	rl "github.com/gen2brain/raylib-go/raylib"
 	"raylib-game/game"
 	"raylib-game/network"
+
+	rl "github.com/gen2brain/raylib-go/raylib"
 )
 
 func main() {
@@ -16,30 +17,40 @@ func main() {
 	udpConn, _ := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
 	defer udpConn.Close()
 
-	room := network.NewRoom("sala1", udpConn)
+	room := network.NewRoom("sala1", udpConn, func(p *net.UDPAddr) {
+		network.Players[p] = game.New(game.Player{
+			W: 50, H: 50, Color: rl.Blue,
+		})
+	},
+		func(p *net.UDPAddr) {})
 	go room.Connect()
+
 	go network.ReceiverLoop(udpConn)
 
 	game.New(game.Player{
-		X:     0,
-		Y:     0,
-		W:     50,
-		H:     50,
-		Name:  "Voce",
-		Color: rl.Red,
+		X:         0,
+		Y:         0,
+		W:         50,
+		H:         50,
+		Name:      "Voce",
+		Color:     rl.Red,
 		Direction: game.Stop,
 		Input: func(p *game.Player) {
 			if rl.IsKeyDown(rl.KeyLeft) {
 				p.Direction = game.Left
+				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyRight) {
 				p.Direction = game.Right
+				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyUp) {
 				p.Direction = game.Up
+				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyDown) {
 				p.Direction = game.Down
+				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
 			}
 		},
 	})

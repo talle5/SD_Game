@@ -11,6 +11,11 @@ var (
 	localIp  string
 )
 
+func init() {
+	publicIp = obterIpPublico()
+	localIp = obterIpLocal()
+}
+
 func obterIpPublico() string {
 	resp, err := http.Get("https://api.ipify.org")
 	if err != nil {
