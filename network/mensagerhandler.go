@@ -8,8 +8,6 @@ import (
 	"strings"
 )
 
-var punchDone = make(chan bool, 1)
-
 func ReceiverLoop(socket *net.UDPConn) {
 	buf := make([]byte, 1024)
 	for {
@@ -23,36 +21,37 @@ func ReceiverLoop(socket *net.UDPConn) {
 		switch mensagem[0] {
 		case "PUNCH", "PUNCH_OK":
 			socket.WriteToUDP([]byte("PUNCH_OK"), addr)
-			punchDone <- true
+			// Envia o addr para o canal do punch.go destravar
+			select {
+			case punchChan <- addr:
+			default:
+			}
 		case "move":
-			move(mensagem[1:msize])
+			fmt.Print(texto)
+			move(addr, mensagem[1:msize])
 		case "exit":
-			exit(mensagem[1:msize])
+			exit(addr, mensagem[1:msize])
 		default:
-			fmt.Printf("[UDP] Mensagem desconhecida: %s\n", texto)
+			if texto != "" {
+				fmt.Printf("[UDP] Mensagem desconhecida: %s\n", texto)
+			}
 		}
 	}
 }
 
-func move(message []string) {
-	id := message[0]
-	peer := Peers[id]
-	if peer == nil {
-		return
-	}
-	plr := Players[peer]
+func move(addr *net.UDPAddr, message []string) {
+    // Busca o jogador convertendo o endereço UDP para texto ("IP:Porta")
+	plr := Players[addr.String()] 
 	if plr == nil {
 		return
 	}
-	x := message[1]
-	y := message[2]
-	d := message[3]
-	plr.X = atoi32(x)
-	plr.Y = atoi32(y)
-	plr.Direction = game.Direction(atoi32(d))
+	
+	plr.X = atoi32(message[0])
+	plr.Y = atoi32(message[1])
+	plr.Direction = game.Direction(atoi32(message[2]))
 }
 
-func exit(message []string) {}
+func exit(addr *net.UDPAddr, message []string) {}
 
 func atoi32(s string) int32 {
 	i, _ := strconv.Atoi(s)

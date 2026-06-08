@@ -18,14 +18,14 @@ func main() {
 	defer udpConn.Close()
 
 	room := network.NewRoom("sala1", udpConn, func(p *net.UDPAddr) {
-		network.Players[p] = game.New(game.Player{
+		network.Players[p.String()] = game.New(game.Player{ 
 			W: 50, H: 50, Color: rl.Blue,
 		})
 	},
 		func(p *net.UDPAddr) {})
-	go room.Connect()
 
 	go network.ReceiverLoop(udpConn)
+	go room.Connect()
 
 	game.New(game.Player{
 		X:         0,

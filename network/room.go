@@ -15,7 +15,7 @@ const (
 )
 
 var Peers = map[string]*net.UDPAddr{}
-var Players = map[*net.UDPAddr]*game.Player{}
+var Players = map[string]*game.Player{}
 
 type Room struct {
 	udpConn *net.UDPConn
@@ -143,7 +143,8 @@ func resolveremoto(peer Peer, eu Peer, udpConn *net.UDPConn) (*net.UDPAddr, bool
 // IP local e a porta utilizada pela conexão UDP deste cliente.
 func (r *Room) meuPeer() Peer {
 	port := r.udpConn.LocalAddr().(*net.UDPAddr).Port
-	return Peer{Ip: publicIp, LocalIp: localIp, Port: port}
+    // Passando o clientID gerado no mqttclient.go para garantir unicidade
+	return Peer{Id: clientID, Ip: publicIp, LocalIp: localIp, Port: port}
 }
 
 func Broadcast(msg []byte, udpConn *net.UDPConn) {
