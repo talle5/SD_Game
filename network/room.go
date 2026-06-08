@@ -106,19 +106,24 @@ func buscarHost() *Peer {
 // subscreverSinal inscreve o peer no tópico de sinalização MQTT para receber notificações
 // sempre que um novo peer tentar entrar na sala. Inicia automaticamente o hole punching com o novo peer.
 func (r *Room) subscreverSinal() {
-	topic := topicSinal + "/" + r.sala
-	SubscribeMQTT(topic, func(payload []byte) {
-		var peer Peer
-		if err := json.Unmarshal(payload, &peer); err != nil {
-			return
-		}
-		eu := r.meuPeer()
-		addr, ok := resolveremoto(peer, eu, r.udpConn)
-		if ok {
-			Peers[peer.Id] = addr
-			r.OnJoin(addr)
-		}
-	})
+    topic := topicSinal + "/" + r.sala
+    SubscribeMQTT(topic, func(payload []byte) {
+        var peer Peer
+        if err := json.Unmarshal(payload, &peer); err != nil {
+            return
+        }
+        eu := r.meuPeer()
+
+        if peer.Ip == eu.Ip && peer.LocalIp == eu.LocalIp && peer.Port == eu.Port {
+            return
+        }
+        
+        addr, ok := resolveremoto(peer, eu, r.udpConn)
+        if ok {
+            Peers[peer.Id] = addr
+            r.OnJoin(addr)
+        }
+    })
 }
 
 func resolveremoto(peer Peer, eu Peer, udpConn *net.UDPConn) (*net.UDPAddr, bool) {
