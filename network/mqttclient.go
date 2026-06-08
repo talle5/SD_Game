@@ -69,3 +69,7 @@ func SubscribeMQTT(topic string, handler func([]byte)) error {
 	token.Wait()
 	return token.Error()
 }
+
+func GetClientID() string {
+	return clientID
+}

@@ -17,13 +17,12 @@ func main() {
 	udpConn, _ := net.ListenUDP("udp", &net.UDPAddr{Port: 0})
 	defer udpConn.Close()
 
-	room := network.NewRoom("sala1", udpConn, func(p *net.UDPAddr) {
-		network.Players[p.String()] = game.New(game.Player{ 
+	room := network.NewRoom("sala1", udpConn, func(id string, p *net.UDPAddr) {
+		network.Players[id] = game.New(game.Player{ // <--- Usar o id aqui
 			W: 50, H: 50, Color: rl.Blue,
 		})
 	},
 		func(p *net.UDPAddr) {})
-
 	go network.ReceiverLoop(udpConn)
 	go room.Connect()
 
@@ -38,19 +37,19 @@ func main() {
 		Input: func(p *game.Player) {
 			if rl.IsKeyDown(rl.KeyLeft) {
 				p.Direction = game.Left
-				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
+				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyRight) {
 				p.Direction = game.Right
-				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
+				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyUp) {
 				p.Direction = game.Up
-				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
+				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
 			if rl.IsKeyDown(rl.KeyDown) {
 				p.Direction = game.Down
-				go network.Broadcast([]byte(fmt.Sprintf("move %d %d %d", p.X, p.Y, p.Direction)), udpConn)
+				go network.Broadcast([]byte(fmt.Sprintf("move %s %d %d %d", network.GetClientID(), p.X, p.Y, p.Direction)), udpConn)
 			}
 		},
 	})

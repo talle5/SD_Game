@@ -8,7 +8,6 @@ import (
 
 var punchChan = make(chan *net.UDPAddr, 1)
 
-// punch — só espera o canal
 func punch(ip string, port int, udpConn *net.UDPConn) (*net.UDPAddr, bool) {
 	addr, _ := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", ip, port))
 	ping := []byte("PUNCH")

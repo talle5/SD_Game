@@ -20,12 +20,11 @@ var Players = map[string]*game.Player{}
 type Room struct {
 	udpConn *net.UDPConn
 	sala    string
-	OnJoin  func(*net.UDPAddr) // callback: peer conectou
-	OnLeave func(*net.UDPAddr) // callback: peer saiu
+	OnJoin  func(id string, addr *net.UDPAddr)
+	OnLeave func(addr *net.UDPAddr)
 }
-
 // NewRoom cria e inicializa uma nova estrutura Room, configurando os callbacks e canais.
-func NewRoom(nomeSala string, udpConn *net.UDPConn, onJoin, onLeave func(*net.UDPAddr)) *Room {
+func NewRoom(nomeSala string, udpConn *net.UDPConn, onJoin func(id string, addr *net.UDPAddr), onLeave func(*net.UDPAddr)) *Room {
 	return &Room{
 		sala:    nomeSala,
 		udpConn: udpConn,
@@ -75,7 +74,7 @@ func (r *Room) entrar(host *Peer) {
 	addr, ok := punch(host.Ip, host.Port, r.udpConn)
 	if ok {
 		Peers[host.Id] = addr
-		r.OnJoin(addr)
+		r.OnJoin(host.Id, addr)
 	}
 
 }
@@ -121,7 +120,7 @@ func (r *Room) subscreverSinal() {
         addr, ok := resolveremoto(peer, eu, r.udpConn)
         if ok {
             Peers[peer.Id] = addr
-            r.OnJoin(addr)
+            r.OnJoin(peer.Id, addr)
         }
     })
 }

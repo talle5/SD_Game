@@ -21,14 +21,13 @@ func ReceiverLoop(socket *net.UDPConn) {
 		switch mensagem[0] {
 		case "PUNCH", "PUNCH_OK":
 			socket.WriteToUDP([]byte("PUNCH_OK"), addr)
-			// Envia o addr para o canal do punch.go destravar
 			select {
 			case punchChan <- addr:
 			default:
 			}
 		case "move":
-			fmt.Print(texto)
-			move(addr, mensagem[1:msize])
+			fmt.Println(texto)
+			move(mensagem[1:msize])
 		case "exit":
 			exit(addr, mensagem[1:msize])
 		default:
@@ -39,16 +38,28 @@ func ReceiverLoop(socket *net.UDPConn) {
 	}
 }
 
-func move(addr *net.UDPAddr, message []string) {
-    // Busca o jogador convertendo o endereço UDP para texto ("IP:Porta")
-	plr := Players[addr.String()] 
+func move(message []string) {
+	if len(message) < 4 {
+		return
+	}
+
+	id := message[0]
+	
+	peer := Peers[id]
+	if peer == nil {
+		return
+	}
+	plr := Players[id] 
 	if plr == nil {
 		return
 	}
-	
-	plr.X = atoi32(message[0])
-	plr.Y = atoi32(message[1])
-	plr.Direction = game.Direction(atoi32(message[2]))
+
+	x := message[1]
+	y := message[2]
+	d := message[3]
+	plr.X = atoi32(x)
+	plr.Y = atoi32(y)
+	plr.Direction = game.Direction(atoi32(d))
 }
 
 func exit(addr *net.UDPAddr, message []string) {}
