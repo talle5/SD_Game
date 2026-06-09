@@ -39,7 +39,7 @@ func ReceiverLoop(socket *net.UDPConn) {
 }
 
 func move(message []string) {
-	if len(message) < 4 {
+	if len(message) != 4 {
 		return
 	}
 
@@ -54,17 +54,19 @@ func move(message []string) {
 		return
 	}
 
-	x := message[1]
-	y := message[2]
-	d := message[3]
-	plr.X = atoi32(x)
-	plr.Y = atoi32(y)
-	plr.Direction = game.Direction(atoi32(d))
+	xVal, errX := strconv.ParseInt(message[1], 10, 32)
+	yVal, errY := strconv.ParseInt(message[2], 10, 32)
+	dVal, errD := strconv.ParseInt(message[3], 10, 32)
+	if errX != nil || errY != nil || errD != nil {
+		return	
+	}
+	if dVal < 0 || dVal > 4 {
+		return
+	}
+
+	plr.X = int32(xVal)
+	plr.Y = int32(yVal)
+	plr.Direction = game.Direction(dVal)
 }
 
 func exit(addr *net.UDPAddr, message []string) {}
-
-func atoi32(s string) int32 {
-	i, _ := strconv.Atoi(s)
-	return int32(i)
-}
